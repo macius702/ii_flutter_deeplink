@@ -1,6 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:uni_links/uni_links.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_custom_tabs/flutter_custom_tabs_lite.dart';
 
 void main() {
   runApp(const MyApp());
@@ -31,74 +33,122 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String _latestLink = 'Unknown';
+
+  Uri? _initialURI;
+  Uri? _currentURI;
+  StreamSubscription? _streamSubscription;
+
 
   @override
   void initState() {
     super.initState();
-    initPlatformState();
+    _initUniLinks();
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    String? initialLink;
+  Future<void> _initUniLinks() async {
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
-      initialLink = await getInitialLink();
+      _initialURI = await getInitialUri();
     } catch (e) {
       // Handle exception by warning the user their action did not succeed
       // return SnackBar(content: Text("Failed to open link"));
     }
 
-    // Attach a listener to the links stream
-    getLinksStream().listen((String link) {
-      // Parse the link and warn the user, if it is not correct,
-      // but keep in mind it could be `null` if the `link` is in the format `uni_links://example.com/xyz`
-      setState(() {
-        _latestLink = link;
-      });
+    // Listen for incoming links
+    _streamSubscription = linkStream.listen((String? link) {
+      if (link != null) {
+        setState(() {
+          _currentURI = Uri.parse(link);
+        });
+      }
     }, onError: (err) {
-      // Handle exception by warning the user their action did not succeed
-    });
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    setState(() {
-      _latestLink = initialLink ?? 'Unknown';
+      // Handle error
     });
   }
 
   @override
+  void dispose() {
+    _streamSubscription?.cancel();
+    super.dispose();
+  }
+
+
+  final TextEditingController _urlController = TextEditingController();
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(title: Text('Deep Linking Example')),
+        body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text('Latest link: $_latestLink\n'),
+            Text('Initial URI: $_initialURI\nCurrent URI: $_currentURI'),
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: TextField(
+                controller: _urlController,
+                decoration: const InputDecoration(
+                  labelText: 'Enter URL',
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => _launchURL(_urlController.text, context),
+              child: const Text('Open Browser'),
+            ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _launchURL,
-        tooltip: 'Open Browser',
-        child: const Icon(Icons.open_in_browser),
       ),
     );
   }
 
-  _launchURL() async {
-    const url = 'https://your-website.com';
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      throw 'Could not launch $url';
+        // public string greetFrontend = "https://qsgof-4qaaa-aaaan-qekqq-cai.icp0.io/";
+
+      //  public void OpenBrowser()
+      //   {
+      //       var target = mTestICPAgent.greetFrontend + "?sessionkey=" + ByteUtil.ToHexString(mTestICPAgent.TestIdentity.PublicKey.ToDerEncoding());
+      //       Application.OpenURL(target);
+      //   }
+
+
+// void _launchURL(String urlString) async {
+//   try {
+//     await launch(urlString);
+//   } catch (e) {
+//     print('Could not launch $urlString: $e');
+//   }
+// }
+  // void _launchURL(String text) async {
+
+  //   //const url = 'https://qsgof-4qaaa-aaaan-qekqq-cai.icp0.io/';
+  //   final Uri uri = Uri.parse(text);
+
+  //   if (await canLaunchUrl(uri)) {
+  //     await launchUrl(uri);
+  //   } else {
+  //     throw 'Could not launch $uri';
+  //   }
+  // }
+
+void _launchURL(String url, BuildContext context) async {
+    final theme = Theme.of(context);
+    try {
+      await launchUrl(
+        Uri.parse('https://qsgof-4qaaa-aaaan-qekqq-cai.icp0.io'),
+        //Uri.parse('https://www.wp.pl'),
+        //Uri.parse('https://flutter.dev'),
+        options: LaunchOptions(
+          barColor: theme.colorScheme.surface,
+          onBarColor: theme.colorScheme.onSurface,
+          barFixingEnabled: false,
+        ),
+      );
+    } catch (e) {
+      // If the URL launch fails, an exception will be thrown. (For example, if no browser app is installed on the Android device.)
+      debugPrint(e.toString());
     }
-  }
+}  
+
 }
