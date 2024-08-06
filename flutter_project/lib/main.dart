@@ -9,16 +9,16 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:agent_dart/agent/auth.dart'
-// show SignIdentity
+ show SignIdentity
 ;
 // import 'package:agent_dart/identity/delegation.dart';
 // import 'package:flutter_web_auth/flutter_web_auth.dart';
 // import 'package:agent_dart/auth_client/auth_client.dart';
 import 'package:agent_dart/utils/extension.dart'
-// show toHex
+ show U8aExtension hide U8aBufferExtension
 ;
 import 'package:agent_dart/identity/ed25519.dart'
-// show Ed25519KeyIdentity
+ show Ed25519KeyIdentity
 ;
 
 
