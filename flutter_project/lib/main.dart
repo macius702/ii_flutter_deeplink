@@ -102,19 +102,24 @@ class _MyHomePageState extends State<MyHomePage> {
         body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text('Initial URI: $_initialURI\nCurrent URI: $_currentURI'),
-            Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: TextField(
-                controller: _urlController,
-                decoration: const InputDecoration(
-                  labelText: 'Enter URL',
+            Expanded(child: Text('Initial URI: $_initialURI\nCurrent URI: $_currentURI')),
+            Expanded(
+              child: 
+                Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: TextField(
+                    controller: _urlController,
+                    decoration: const InputDecoration(
+                      labelText: 'Enter URL',
+                    ),
+                  ),
                 ),
-              ),
             ),
-            ElevatedButton(
-              onPressed: () => _launchURL(_urlController.text, context),
-              child: const Text('Open Browser'),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => _launchURL(_urlController.text, context),
+                child: const Text('Open Browser'),
+              ),
             ),
           ],
         ),
