@@ -1,3 +1,4 @@
+#define UNITY_IOS
 #if UNITY_IOS
 using System.IO;
 using UnityEditor;

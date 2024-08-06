@@ -1,3 +1,4 @@
+#define UNITY_ANDROID
 #if UNITY_ANDROID
 using System;
 using System.IO;
