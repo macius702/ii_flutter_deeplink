@@ -4,6 +4,24 @@ import 'package:flutter/material.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:flutter_custom_tabs/flutter_custom_tabs_lite.dart';
 
+
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:agent_dart/agent/auth.dart'
+// show SignIdentity
+;
+// import 'package:agent_dart/identity/delegation.dart';
+// import 'package:flutter_web_auth/flutter_web_auth.dart';
+// import 'package:agent_dart/auth_client/auth_client.dart';
+import 'package:agent_dart/utils/extension.dart'
+// show toHex
+;
+import 'package:agent_dart/identity/ed25519.dart'
+// show Ed25519KeyIdentity
+;
+
+
 void main() {
   runApp(const MyApp());
 }
@@ -74,7 +92,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
 
-  final TextEditingController _urlController = TextEditingController();
+  final TextEditingController _urlController = TextEditingController(text:generateIdentityAndUrl());
 
   @override
   Widget build(BuildContext context) {
@@ -132,23 +150,48 @@ class _MyHomePageState extends State<MyHomePage> {
   //   }
   // }
 
-void _launchURL(String url, BuildContext context) async {
-    final theme = Theme.of(context);
-    try {
-      await launchUrl(
-        Uri.parse('https://qsgof-4qaaa-aaaan-qekqq-cai.icp0.io'),
-        //Uri.parse('https://www.wp.pl'),
-        //Uri.parse('https://flutter.dev'),
-        options: LaunchOptions(
-          barColor: theme.colorScheme.surface,
-          onBarColor: theme.colorScheme.onSurface,
-          barFixingEnabled: false,
-        ),
-      );
-    } catch (e) {
-      // If the URL launch fails, an exception will be thrown. (For example, if no browser app is installed on the Android device.)
-      debugPrint(e.toString());
-    }
-}  
 
+
+  void _launchURL(String url, BuildContext context) async {
+      final theme = Theme.of(context);
+      try {
+        await launchUrl(
+          Uri.parse(url),
+          //Uri.parse('https://qsgof-4qaaa-aaaan-qekqq-cai.icp0.io'),
+          //Uri.parse('https://www.wp.pl'),
+          //Uri.parse('https://flutter.dev'),
+          options: LaunchOptions(
+            barColor: theme.colorScheme.surface,
+            onBarColor: theme.colorScheme.onSurface,
+            barFixingEnabled: false,
+          ),
+        );
+      } catch (e) {
+        // If the URL launch fails, an exception will be thrown. (For example, if no browser app is installed on the Android device.)
+        debugPrint(e.toString());
+      }
+  }  
+    
+
+
+
+
+      //  public void OpenBrowser()
+      //   {
+      //       var target = mTestICPAgent.greetFrontend + "?sessionkey=" + ByteUtil.ToHexString(mTestICPAgent.TestIdentity.PublicKey.ToDerEncoding());
+      //       Application.OpenURL(target);
+      //   }
+
+}
+
+String generateIdentityAndUrl() {
+    SignIdentity key = Ed25519KeyIdentity.generate(null);
+    
+    final sessionPublicKey =  key.getPublicKey().toDer().toHex() ;       
+
+    const greetFrontend = "https://qsgof-4qaaa-aaaan-qekqq-cai.icp0.io/";
+
+    final target = "$greetFrontend?sessionkey=$sessionPublicKey";
+
+    return target;
 }
