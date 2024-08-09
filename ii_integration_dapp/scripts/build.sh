@@ -63,7 +63,7 @@ dart format $ROOT_DIRECTORY/src/flutter_project/lib/*.dart
 # dfx stop
 dfx start --clean --background &
 
-sleep 3
+sleep 5
 
 # dfx start --background &
 # flutter clean

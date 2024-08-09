@@ -45,9 +45,9 @@ class ICPconnector {
     }
   }
 
-  static Future<ICPconnector> init({Identity? identity, ServiceClass? newIdl}) async {
+  static Future<ICPconnector> init({Identity? identity, ServiceClass? newIdl, String? a_backendCanisterId}) async {
     ICPconnector icpConnector = ICPconnector(
-        canisterId: backendCanisterId,
+        canisterId: a_backendCanisterId ?? backendCanisterId,
         url: get_frontend_url(), // set agent when other paramater comes in like new Identity
         newIdl: newIdl);
 
@@ -69,6 +69,6 @@ String get_frontend_url() {
       : mode == Mode.local
           ? kIsWeb
               ? 'http://127.0.0.1:4943'
-              : 'http://10.0.2.2:4943' // for android emulator
+              : 'https://icp-api.io' // for android emulator
           : 'https://icp-api.io'; // for Mode.network
 }

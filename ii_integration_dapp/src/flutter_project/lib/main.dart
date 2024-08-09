@@ -1,12 +1,17 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'dart:async';
 import 'dart:convert';
 
 import 'package:agent_dart/agent_dart.dart';
+import 'package:agent_dart/principal/principal.dart';
+import 'package:agent_dart/protobuf/ic_ledger/pb/v1/types.pbjson.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_project/ICP/ICP_Connector.dart';
-import 'package:flutter_project/ICP/backend_interface.dart';
+import 'package:flutter_project/greeting_client.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:flutter_custom_tabs/flutter_custom_tabs_lite.dart';
+import 'dart:convert' as convert;
 
 import 'dart:io';
 import 'dart:typed_data';
@@ -20,6 +25,8 @@ import 'package:agent_dart/utils/extension.dart'
     hide U8aBufferExtension;
 import 'package:agent_dart/identity/ed25519.dart' show Ed25519KeyIdentity;
 
+
+
 // ignore: constant_identifier_names
 const KEY_LOCALSTORAGE_KEY = 'identity'; //mtlk todo internetidentity insdead ?
 // ignore: constant_identifier_names
@@ -28,7 +35,6 @@ const KEY_LOCALSTORAGE_DELEGATION = 'delegation';
 void main() async {
   final icpConnector = await ICPconnector.init(newIdl: BackendMethod.idl);
 
-  backend_interface = ICPBackendInterface(icpConnector);
 
   runApp(const MyApp());
 }
@@ -48,6 +54,10 @@ class MyApp extends StatelessWidget {
   }
 }
 
+SignIdentity generateKey() {
+  return Ed25519KeyIdentity.generate(null);
+}
+
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key, required this.title}) : super(key: key);
 
@@ -58,15 +68,23 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  static const greetBackendCanister = "qvhir-riaaa-aaaan-qekqa-cai";
+
   Uri? _initialURI;
   Uri? _currentURI;
+  SignIdentity? _testIdentity;
+
   StreamSubscription? _streamSubscription;
   DelegationIdentity? _delegationIdentity;
+
+  String _greetText = '';
 
   @override
   void initState() {
     super.initState();
     _initUniLinks();
+    _testIdentity = generateKey();
+    _urlController.text = generateIdentityAndUrl(_testIdentity!);
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
@@ -84,6 +102,8 @@ class _MyHomePageState extends State<MyHomePage> {
       if (link != null) {
         setState(() {
           _currentURI = Uri.parse(link);
+          String uriString = _currentURI?.toString() ?? 'default_value';
+          OnDeepLinkActivated(uriString);
         });
       }
     }, onError: (err) {
@@ -119,104 +139,84 @@ class _MyHomePageState extends State<MyHomePage> {
       print("Cannot find delegation");
       return;
     }
-    var map = Map<String, dynamic>.from(jsonDecode(url));
-    var identityString = map[KEY_LOCALSTORAGE_KEY] as String?;
-    var delegationString = map[KEY_LOCALSTORAGE_DELEGATION] as String?;
 
-    SignIdentity? key = identityString != null
-        ? Ed25519KeyIdentity.fromJSON(identityString)
-        : null;
-    DelegationChain? chain = delegationString != null
-        ? DelegationChain.fromJSON(delegationString)
-        : null;
+    String substring =
+        url.substring(indexOfDelegation + kDelegationParam.length);
 
-    DelegationIdentity? identity;
+    final UrlDecodedSubstring = Uri.decodeComponent(substring);
 
-    if (chain != null && !isDelegationValid(chain, null)) {
-      key = null;
-    } else {
-      _delegationIdentity = DelegationIdentity.fromDelegation(key!, chain!);
-    }
-    // return FromStorageResult(
-    //     delegationChain: chain,
-    //     signIdentity: key,
-    //     delegationIdentity: identity);      //mTestICPAgent.DelegationIdentity = ConvertJsonToDelegationIdentity(delegationString);
+    // final decoded = jsonDecode(UrlDecodedSubstring);
+
+    // Map<String, dynamic> delegationsMap = {
+    //   "delegations": decoded["delegations"]
+    // };
+
+    // var map = Map<String, dynamic>.from(decoded);
+    // // var identityString = map[KEY_LOCALSTORAGE_KEY] as String?;
+    // // var delegationString = map[KEY_LOCALSTORAGE_DELEGATION] as String?;
+
+    // String identityString = map['publicKey'];
+
+    _delegationIdentity = ConvertJsonToDelegationIdentity(UrlDecodedSubstring);
   }
 
-  //       internal DelegationIdentity ConvertJsonToDelegationIdentity(string jsonDelegation)
-  //       {
-  //           var delegationChainModel = JsonConvert.DeserializeObject<DelegationChainModel>(jsonDelegation);
-  //           if (delegationChainModel == null && delegationChainModel.delegations.Length == 0)
-  //           {
-  //               Debug.LogError("Invalid delegation chain.");
-  //               return null;
-  //           }
+  DelegationIdentity? ConvertJsonToDelegationIdentity(String jsonDelegation) {
+    final obj = jsonDecode(jsonDelegation);
+    DelegationChain? chain =
+        jsonDelegation != null ? DelegationChain.fromJSON(obj) : null;
 
-  //           // Initialize DelegationIdentity.
-  //           var delegations = new List<SignedDelegation>();
-  //           foreach (var signedDelegationModel in delegationChainModel.delegations)
-  //           {
-  //               var pubKey = SubjectPublicKeyInfo.FromDerEncoding(ByteUtil.FromHexString(signedDelegationModel.delegation.pubkey));
-  //               var expiration = ICTimestamp.FromNanoSeconds(Convert.ToUInt64(signedDelegationModel.delegation.expiration, 16));
-  //               var delegation = new Delegation(pubKey, expiration);
+    if (chain == null) {
+      return null;
+    }
 
-  //               var signature = ByteUtil.FromHexString(signedDelegationModel.signature);
-  //               var signedDelegation = new SignedDelegation(delegation, signature);
-  //               delegations.Add(signedDelegation);
-  //           }
+    // // Initialize DelegationIdentity.
+    // List<SignedDelegation> delegations = [];
+    // for (var signedDelegation in chain.delegations) {
+    //   print('In for loop');
+    //       final cus = signedDelegation.delegation?.pubkey;
+    //       // now hex decode cus
+    //       final decoded = convert.hex.decode(cus);
+    //       final pubKey = PublicKey.fromDerEncoding(decoded);
 
-  //           var chainPublicKey = SubjectPublicKeyInfo.FromDerEncoding(ByteUtil.FromHexString(delegationChainModel.publicKey));
-  //           var delegationChain = new DelegationChain(chainPublicKey, delegations);
-  //           var delegationIdentity = new DelegationIdentity(mTestICPAgent.TestIdentity, delegationChain);
+    // }
 
-  //           return delegationIdentity;
-  //       }
-  //   }
-  // the above in dart :
-  // DelegationIdentity ConvertJsonToDelegationIdentity(String jsonDelegation)
-  //  {
-  //    DelegationChain? chain = jsonDelegation != null
-  //       ? DelegationChain.fromJSON(jsonDelegation)
-  //       : null;
+    // var chainPublicKey = SubjectPublicKeyInfo.fromDerEncoding(hex.decode(delegationChainModel['publicKey']));
+    // var delegationChain = DelegationChain(chainPublicKey, delegations);
+    // var delegationIdentity = DelegationIdentity(mTestICPAgent.testIdentity, delegationChain);
 
-  //   DelegationIdentity? identity;
+    //return delegationIdentity;
 
-  //   if (chain != null && !isDelegationValid(chain, null)) {
-  //     key = null;
-  //   } else {
-  //     identity = DelegationIdentity.fromDelegation(key!, chain!);
-  //   }
+    return DelegationIdentity(_testIdentity!, chain);
+  }
 
-  //       var chainPublicKey = SubjectPublicKeyInfo.FromDerEncoding(ByteUtil.FromHexString(delegationChainModel.publicKey));
-  //       var delegationChain = new DelegationChain(chainPublicKey, delegations);
-  //       var delegationIdentity = new DelegationIdentity(mTestICPAgent.TestIdentity, delegationChain);
-
-  //       return delegationIdentity;
-  //       return DelegationIdentity();
-  //  }
-
-  //     private async void CallCanisterGreet()
-  //     {
-  //         if (DelegationIdentity == null)
-  //             return;
-
-  //         // Initialize HttpAgent.
-  //         var agent = new HttpAgent(DelegationIdentity);
-
-  //         var canisterId = Principal.FromText(greetBackendCanister);
-
-  //         // Initialize the client and make the call.
-  //         var client = new GreetingClient.GreetingClient(agent, canisterId);
-  //         var content = await client.Greet();
-
-  //         if (mMyPrincipalText != null)
-  //             mMyPrincipalText.text = content;
-  //     }
-  // }
-  // the above in dart
-  void CallCanisterGreet() {
+  Future<String?> CallCanisterGreet() async {
     //zrób tutaj normalne odpalenie do baclendu czyli ICPconector mtlk todo
     // no i test czy to sie łączy z backendem przez delegowaną identity
+    if (_delegationIdentity == null) {
+      return null;
+    }
+
+    final icpConnector = await ICPconnector.init(
+        identity: _delegationIdentity,
+        newIdl: BackendMethod.idl,
+        a_backendCanisterId: greetBackendCanister);
+
+    final client = GreetingClient(icpConnector);
+
+    // // Initialize HttpAgent.
+    // final options = HttpAgentOptions()..identity = _delegationIdentity;
+    // final agent = HttpAgent(options: options);
+
+    // //create canisterId using Principal from string
+    // final canisterId = Principal.fromText(greetBackendCanister);
+
+    // final client = GreetingClient(_delegationIdentity, greetBackendCanister);
+
+    final content = await client.Greet();
+    return content;
+
+    // if (mMyPrincipalText != null)
+    //     mMyPrincipalText.text = content;
   }
 
   @override
@@ -225,8 +225,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
-  final TextEditingController _urlController =
-      TextEditingController(text: generateIdentityAndUrl());
+  final TextEditingController _urlController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -250,6 +249,17 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () => _launchURL(_urlController.text, context),
               child: const Text('Open Browser'),
             ),
+            ElevatedButton(
+              onPressed: () async  {
+                final s = await CallCanisterGreet();
+                setState(() {
+                  _greetText = s ?? 'Error';
+                });
+              },
+              
+              child: const Text('Call Canister Greet'),
+            ),
+            Text(_greetText),
           ],
         ),
       ),
@@ -310,9 +320,7 @@ class _MyHomePageState extends State<MyHomePage> {
   //   }
 }
 
-String generateIdentityAndUrl() {
-  SignIdentity key = Ed25519KeyIdentity.generate(null);
-
+String generateIdentityAndUrl(SignIdentity key) {
   final sessionPublicKey = key.getPublicKey().toDer().toHex();
 
   const greetFrontend = "https://qsgof-4qaaa-aaaan-qekqq-cai.icp0.io/";
