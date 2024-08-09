@@ -1,40 +1,26 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:agent_dart/agent_dart.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_project/ICP/ICP_Connector.dart';
-import 'package:flutter_project/ICP/backend_interface.dart';
-import 'package:uni_links/uni_links.dart';
-import 'package:flutter_custom_tabs/flutter_custom_tabs_lite.dart';
-
-import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:agent_dart/agent/auth.dart' show SignIdentity;
-// import 'package:agent_dart/identity/delegation.dart';
-// import 'package:flutter_web_auth/flutter_web_auth.dart';
-// import 'package:agent_dart/auth_client/auth_client.dart';
+import 'package:agent_dart/identity/delegation.dart'
+    show DelegationIdentity, DelegationChain;
 import 'package:agent_dart/utils/extension.dart'
     show U8aExtension
     hide U8aBufferExtension;
 import 'package:agent_dart/identity/ed25519.dart' show Ed25519KeyIdentity;
 
-// ignore: constant_identifier_names
-const KEY_LOCALSTORAGE_KEY = 'identity'; //mtlk todo internetidentity insdead ?
-// ignore: constant_identifier_names
-const KEY_LOCALSTORAGE_DELEGATION = 'delegation';
+import 'package:flutter/material.dart';
+import 'package:flutter_project/ICP/ICP_Connector.dart';
+import 'package:flutter_project/greeting_client.dart';
+import 'package:uni_links/uni_links.dart';
+import 'package:flutter_custom_tabs/flutter_custom_tabs_lite.dart';
 
 void main() async {
-  final icpConnector = await ICPconnector.init(newIdl: BackendMethod.idl);
-
-  backend_interface = ICPBackendInterface(icpConnector);
-
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -48,8 +34,12 @@ class MyApp extends StatelessWidget {
   }
 }
 
+SignIdentity generateKey() {
+  return Ed25519KeyIdentity.generate(null);
+}
+
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
+  const MyHomePage({super.key, required this.title});
 
   final String title;
 
@@ -57,61 +47,57 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+const String kGreetFrontend = "https://qsgof-4qaaa-aaaan-qekqq-cai.icp0.io/";
+
 class _MyHomePageState extends State<MyHomePage> {
+  static const String greetBackendCanister = "qvhir-riaaa-aaaan-qekqa-cai";
+
   Uri? _initialURI;
   Uri? _currentURI;
+  SignIdentity? _testIdentity;
+
   StreamSubscription? _streamSubscription;
   DelegationIdentity? _delegationIdentity;
+
+  String _greetText = '';
+  final TextEditingController _urlController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _initUniLinks();
+    _testIdentity = generateKey();
+    _urlController.text = generateIdentityAndUrl(_testIdentity!);
   }
 
-  // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> _initUniLinks() async {
-    // Platform messages may fail, so we use a try/catch PlatformException.
+    final localContext = context;
+
     try {
       _initialURI = await getInitialUri();
     } catch (e) {
-      // Handle exception by warning the user their action did not succeed
-      // return SnackBar(content: Text("Failed to open link"));
+      if (mounted) {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(localContext).showSnackBar(
+          SnackBar(content: Text("Failed to open link: $e")),
+        );
+      }
     }
 
-    // Listen for incoming links
     _streamSubscription = linkStream.listen((String? link) {
       if (link != null) {
         setState(() {
           _currentURI = Uri.parse(link);
+          onDeepLinkActivated(link);
         });
       }
     }, onError: (err) {
-      // Handle error
+      debugPrint("Error listening to link stream: $err");
     });
   }
 
-  // public void OnDeepLinkActivated(string url)
-  //       {
-  //           if (string.IsNullOrEmpty(url))
-  //               return;
-
-  //           const string kDelegationParam = "delegation=";
-  //           var indexOfDelegation = url.IndexOf(kDelegationParam);
-  //           if (indexOfDelegation == -1)
-  //           {
-  //               Debug.LogError("Cannot find delegation");
-  //               return;
-  //           }
-
-  //           var delegationString = HttpUtility.UrlDecode(url.Substring(indexOfDelegation + kDelegationParam.Length));
-  //           mTestICPAgent.DelegationIdentity = ConvertJsonToDelegationIdentity(delegationString);
-  //       }
-  // above function in dart:
-  void OnDeepLinkActivated(String url) {
-    if (url.isEmpty) {
-      return;
-    }
+  void onDeepLinkActivated(String url) {
+    if (url.isEmpty) return;
 
     const kDelegationParam = "delegation=";
     var indexOfDelegation = url.indexOf(kDelegationParam);
@@ -119,178 +105,100 @@ class _MyHomePageState extends State<MyHomePage> {
       print("Cannot find delegation");
       return;
     }
-    var map = Map<String, dynamic>.from(jsonDecode(url));
-    var identityString = map[KEY_LOCALSTORAGE_KEY] as String?;
-    var delegationString = map[KEY_LOCALSTORAGE_DELEGATION] as String?;
 
-    SignIdentity? key = identityString != null
-        ? Ed25519KeyIdentity.fromJSON(identityString)
-        : null;
-    DelegationChain? chain = delegationString != null
-        ? DelegationChain.fromJSON(delegationString)
-        : null;
+    String substring =
+        url.substring(indexOfDelegation + kDelegationParam.length);
 
-    DelegationIdentity? identity;
+    final UrlDecodedSubstring = Uri.decodeComponent(substring);
 
-    if (chain != null && !isDelegationValid(chain, null)) {
-      key = null;
-    } else {
-      _delegationIdentity = DelegationIdentity.fromDelegation(key!, chain!);
-    }
-    // return FromStorageResult(
-    //     delegationChain: chain,
-    //     signIdentity: key,
-    //     delegationIdentity: identity);      //mTestICPAgent.DelegationIdentity = ConvertJsonToDelegationIdentity(delegationString);
+    _delegationIdentity = convertJsonToDelegationIdentity(UrlDecodedSubstring);
   }
 
-  //       internal DelegationIdentity ConvertJsonToDelegationIdentity(string jsonDelegation)
-  //       {
-  //           var delegationChainModel = JsonConvert.DeserializeObject<DelegationChainModel>(jsonDelegation);
-  //           if (delegationChainModel == null && delegationChainModel.delegations.Length == 0)
-  //           {
-  //               Debug.LogError("Invalid delegation chain.");
-  //               return null;
-  //           }
+  DelegationIdentity? convertJsonToDelegationIdentity(String jsonDelegation) {
+    final obj = jsonDecode(jsonDelegation);
+    DelegationChain? chain = DelegationChain.fromJSON(obj);
 
-  //           // Initialize DelegationIdentity.
-  //           var delegations = new List<SignedDelegation>();
-  //           foreach (var signedDelegationModel in delegationChainModel.delegations)
-  //           {
-  //               var pubKey = SubjectPublicKeyInfo.FromDerEncoding(ByteUtil.FromHexString(signedDelegationModel.delegation.pubkey));
-  //               var expiration = ICTimestamp.FromNanoSeconds(Convert.ToUInt64(signedDelegationModel.delegation.expiration, 16));
-  //               var delegation = new Delegation(pubKey, expiration);
+    return DelegationIdentity(_testIdentity!, chain);
+  }
 
-  //               var signature = ByteUtil.FromHexString(signedDelegationModel.signature);
-  //               var signedDelegation = new SignedDelegation(delegation, signature);
-  //               delegations.Add(signedDelegation);
-  //           }
-
-  //           var chainPublicKey = SubjectPublicKeyInfo.FromDerEncoding(ByteUtil.FromHexString(delegationChainModel.publicKey));
-  //           var delegationChain = new DelegationChain(chainPublicKey, delegations);
-  //           var delegationIdentity = new DelegationIdentity(mTestICPAgent.TestIdentity, delegationChain);
-
-  //           return delegationIdentity;
-  //       }
-  //   }
-  // the above in dart :
-  // DelegationIdentity ConvertJsonToDelegationIdentity(String jsonDelegation)
-  //  {
-  //    DelegationChain? chain = jsonDelegation != null
-  //       ? DelegationChain.fromJSON(jsonDelegation)
-  //       : null;
-
-  //   DelegationIdentity? identity;
-
-  //   if (chain != null && !isDelegationValid(chain, null)) {
-  //     key = null;
-  //   } else {
-  //     identity = DelegationIdentity.fromDelegation(key!, chain!);
-  //   }
-
-  //       var chainPublicKey = SubjectPublicKeyInfo.FromDerEncoding(ByteUtil.FromHexString(delegationChainModel.publicKey));
-  //       var delegationChain = new DelegationChain(chainPublicKey, delegations);
-  //       var delegationIdentity = new DelegationIdentity(mTestICPAgent.TestIdentity, delegationChain);
-
-  //       return delegationIdentity;
-  //       return DelegationIdentity();
-  //  }
-
-  //     private async void CallCanisterGreet()
-  //     {
-  //         if (DelegationIdentity == null)
-  //             return;
-
-  //         // Initialize HttpAgent.
-  //         var agent = new HttpAgent(DelegationIdentity);
-
-  //         var canisterId = Principal.FromText(greetBackendCanister);
-
-  //         // Initialize the client and make the call.
-  //         var client = new GreetingClient.GreetingClient(agent, canisterId);
-  //         var content = await client.Greet();
-
-  //         if (mMyPrincipalText != null)
-  //             mMyPrincipalText.text = content;
-  //     }
-  // }
-  // the above in dart
-  void CallCanisterGreet() {
+  Future<String?> callCanisterGreet() async {
     //zrób tutaj normalne odpalenie do baclendu czyli ICPconector mtlk todo
     // no i test czy to sie łączy z backendem przez delegowaną identity
+
+    if (_delegationIdentity == null) {
+      return null;
+    }
+
+    final icpConnector = await ICPconnector.init(
+      identity: _delegationIdentity,
+      newIdl: BackendMethod.idl,
+      a_backendCanisterId: greetBackendCanister,
+    );
+
+    final client = GreetingClient(icpConnector);
+    final content = await client.greet();
+    return content;
+
+    // if (mMyPrincipalText != null)
+    //     mMyPrincipalText.text = content;
   }
 
   @override
   void dispose() {
     _streamSubscription?.cancel();
+    _urlController.dispose();
     super.dispose();
   }
 
-  final TextEditingController _urlController =
-      TextEditingController(text: generateIdentityAndUrl());
-
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(title: Text('Deep Linking Example')),
-        body: ListView(
-          //mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text('Initial URI: $_initialURI\nCurrent URI: $_currentURI'),
-            Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: TextField(
-                controller: _urlController,
-                decoration: const InputDecoration(
-                  labelText: 'Enter URL',
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => _launchURL(_urlController.text, context),
-              child: const Text('Open Browser'),
-            ),
-          ],
+    return Scaffold(
+      appBar: AppBar(title: const Text('Deep Linking Example')),
+      body: ListView(
+        children: <Widget>[
+          Text('Initial URI: $_initialURI\nCurrent URI: $_currentURI'),
+          _buildUrlInput(),
+          ElevatedButton(
+            onPressed: () => _launchURL(_urlController.text, context),
+            child: const Text('Open Browser'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              setState(() {
+                _greetText = 'Loading...'; // Show loading state
+              });
+              final s = await callCanisterGreet();
+              setState(() {
+                _greetText = s ?? 'Error';
+              });
+            },
+            child: const Text('Call Canister Greet'),
+          ),
+          Text(_greetText),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUrlInput() {
+    return Padding(
+      padding: const EdgeInsets.all(10.0),
+      child: TextField(
+        controller: _urlController,
+        decoration: const InputDecoration(
+          labelText: 'Enter URL',
         ),
       ),
     );
   }
 
-  // public string greetFrontend = "https://qsgof-4qaaa-aaaan-qekqq-cai.icp0.io/";
-
-  //  public void OpenBrowser()
-  //   {
-  //       var target = mTestICPAgent.greetFrontend + "?sessionkey=" + ByteUtil.ToHexString(mTestICPAgent.TestIdentity.PublicKey.ToDerEncoding());
-  //       Application.OpenURL(target);
-  //   }
-
-// void _launchURL(String urlString) async {
-//   try {
-//     await launch(urlString);
-//   } catch (e) {
-//     print('Could not launch $urlString: $e');
-//   }
-// }
-  // void _launchURL(String text) async {
-
-  //   //const url = 'https://qsgof-4qaaa-aaaan-qekqq-cai.icp0.io/';
-  //   final Uri uri = Uri.parse(text);
-
-  //   if (await canLaunchUrl(uri)) {
-  //     await launchUrl(uri);
-  //   } else {
-  //     throw 'Could not launch $uri';
-  //   }
-  // }
-
   void _launchURL(String url, BuildContext context) async {
-    final theme = Theme.of(context);
+    final localContext = context;
+
+    final theme = Theme.of(localContext);
     try {
       await launchUrl(
         Uri.parse(url),
-        //Uri.parse('https://qsgof-4qaaa-aaaan-qekqq-cai.icp0.io'),
-        //Uri.parse('https://www.wp.pl'),
-        //Uri.parse('https://flutter.dev'),
         options: LaunchOptions(
           barColor: theme.colorScheme.surface,
           onBarColor: theme.colorScheme.onSurface,
@@ -298,26 +206,18 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       );
     } catch (e) {
-      // If the URL launch fails, an exception will be thrown. (For example, if no browser app is installed on the Android device.)
-      debugPrint(e.toString());
+      debugPrint("Failed to launch URL: $e");
+      if (localContext.mounted) {
+        ScaffoldMessenger.of(localContext).showSnackBar(
+          SnackBar(content: Text("Failed to open URL: $e")),
+        );
+      }
     }
   }
-
-  //  public void OpenBrowser()
-  //   {
-  //       var target = mTestICPAgent.greetFrontend + "?sessionkey=" + ByteUtil.ToHexString(mTestICPAgent.TestIdentity.PublicKey.ToDerEncoding());
-  //       Application.OpenURL(target);
-  //   }
 }
 
-String generateIdentityAndUrl() {
-  SignIdentity key = Ed25519KeyIdentity.generate(null);
-
+String generateIdentityAndUrl(SignIdentity key) {
   final sessionPublicKey = key.getPublicKey().toDer().toHex();
-
-  const greetFrontend = "https://qsgof-4qaaa-aaaan-qekqq-cai.icp0.io/";
-
-  final target = "$greetFrontend?sessionkey=$sessionPublicKey";
-
+  final target = "$kGreetFrontend?sessionkey=$sessionPublicKey";
   return target;
 }
