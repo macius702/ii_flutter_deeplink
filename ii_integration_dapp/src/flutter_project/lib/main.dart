@@ -15,6 +15,8 @@ import 'package:flutter_project/greeting_client.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:flutter_custom_tabs/flutter_custom_tabs_lite.dart';
 
+import 'package:flutter_project/constants.dart';
+
 void main() async {
   runApp(const MyApp());
 }
@@ -47,11 +49,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-const String kGreetFrontend = "https://qsgof-4qaaa-aaaan-qekqq-cai.icp0.io/";
-
 class _MyHomePageState extends State<MyHomePage> {
-  static const String greetBackendCanister = "qvhir-riaaa-aaaan-qekqa-cai";
-
   Uri? _initialURI;
   Uri? _currentURI;
   SignIdentity? _testIdentity;
@@ -132,7 +130,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final icpConnector = await ICPconnector.init(
       identity: _delegationIdentity,
       newIdl: BackendMethod.idl,
-      a_backendCanisterId: greetBackendCanister,
+      a_backendCanisterId: Constants.greetBackendCanister,
     );
 
     final client = GreetingClient(icpConnector);
@@ -218,6 +216,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
 String generateIdentityAndUrl(SignIdentity key) {
   final sessionPublicKey = key.getPublicKey().toDer().toHex();
-  final target = "$kGreetFrontend?sessionkey=$sessionPublicKey";
+  final target = "${Constants.greetFrontendUrl}?sessionkey=$sessionPublicKey";
   return target;
 }

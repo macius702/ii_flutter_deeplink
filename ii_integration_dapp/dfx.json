@@ -4,24 +4,11 @@
       "main": "src/greet_backend/main.mo",
       "type": "motoko"
     },
-    "internet_identity": {
-      "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
-      "frontend": {},
-      "remote": {
-        "id": {
-          "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
-        }
-      },
-      "type": "custom",
-      "wasm": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm.gz"
-    }
-    ,
-
 
     "greet_frontend": {
       "dependencies": [
-        "greet_backend",
-        "internet_identity"
+        "greet_backend"
+
       ],
       "frontend": {
         "entrypoint": "src/greet_frontend/src/index.html"
@@ -30,21 +17,10 @@
         "src/greet_frontend/assets",
         "dist/greet_frontend/"
       ],
+      
       "type": "assets"
-    },
+    }
 
-    "flutter_project": {
-      "dependencies": [
-        "greet_backend",
-        "internet_identity",
-        "greet_frontend"
-      ],
-
-      "source": [
-        "src/flutter_project/build/web"
-      ],
-      "type": "assets"
-    }    
 
   },
   "defaults": {
