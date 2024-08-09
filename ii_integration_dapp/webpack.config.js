@@ -28,7 +28,7 @@ function initCanisterEnv() {
 
   return Object.entries(canisterConfig).reduce((prev, current) => {
     const [canisterName, canisterDetails] = current;
-    prev[canisterName.toUpperCase() + "_CANISTER_ID"] =
+    prev["CANISTER_ID_"  + canisterName.toUpperCase()  ] =
       canisterDetails[network];
     return prev;
   }, {});
