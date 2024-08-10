@@ -49,7 +49,7 @@ cd src/flutter_project
 dart run ./lib/generate_constants.dart
 
 # Run the flutter app
-flutter run $script_params
+flutter run "${script_params[@]}"
 
 # Run flutter web server
 # flutter build web --profile --dart-define=Dart2jsOptimization=O0 --source-maps
