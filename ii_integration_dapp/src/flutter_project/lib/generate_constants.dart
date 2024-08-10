@@ -25,7 +25,7 @@ void main() async {
 class Constants {
   static const String greetBackendCanister = $greetBackendCanister;
   static const String greetFrontendCanister = $greetFrontendCanister;
-  static const String greetFrontendUrl = "https://\$greetFrontendCanister.ic0.app";
+  static const String greetFrontendUrl = "https://\$greetFrontendCanister.icp0.io";
 }
 ''';
 
