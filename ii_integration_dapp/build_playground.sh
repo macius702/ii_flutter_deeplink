@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+
+# ./build_playground.sh --use_original_greet_canisters_on_mainnet -d chrome --web-renderer auto
 set -e
 
 script_params=("$@")
