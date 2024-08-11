@@ -1,5 +1,6 @@
-import 'package:agent_dart/identity/delegation.dart' show DelegationIdentity;
 
+
+import 'package:agent_dart/agent_dart.dart' show Identity;
 import 'package:flutter/material.dart';
 import 'package:flutter_project/ICP/ICP_Connector.dart';
 import 'package:flutter_project/greeting_client.dart';
@@ -36,7 +37,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  DelegationIdentity? _delegationIdentity;
+  Identity? _identity;
 
   String _greetText = '';
 
@@ -44,12 +45,12 @@ class _MyHomePageState extends State<MyHomePage> {
     //zrób tutaj normalne odpalenie do baclendu czyli ICPconector mtlk todo
     // no i test czy to sie łączy z backendem przez delegowaną identity
 
-    if (_delegationIdentity == null) {
+    if (_identity == null) {
       return null;
     }
 
     final icpConnector = await ICPconnector.init(
-      identity: _delegationIdentity,
+      identity: _identity,
       newIdl: BackendMethod.idl,
       a_backendCanisterId: Constants.greetBackendCanister,
     );
@@ -70,9 +71,9 @@ class _MyHomePageState extends State<MyHomePage> {
         children: <Widget>[
           LoginButton(
               context: context,
-              updateDelegationIdentity: (identity) {
+              updateIdentity: (identity) {
                 setState(() {
-                  _delegationIdentity = identity;
+                  _identity = identity;
                 });
               }),
           ElevatedButton(

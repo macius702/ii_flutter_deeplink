@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_project/constants.dart';
 
-import 'package:agent_dart/agent/auth.dart' show SignIdentity;
+import 'package:agent_dart/agent/auth.dart' show SignIdentity, Identity;
 import 'package:agent_dart/identity/ed25519.dart' show Ed25519KeyIdentity;
 import 'package:agent_dart/identity/delegation.dart'
     show DelegationIdentity, DelegationChain;
@@ -19,9 +19,9 @@ import 'package:flutter_custom_tabs/flutter_custom_tabs_lite.dart';
 
 class LoginButton extends StatefulWidget {
   final BuildContext context;
-  final Function(DelegationIdentity) updateDelegationIdentity;
+  final Function(Identity) updateIdentity;
 
-  LoginButton({required this.context, required this.updateDelegationIdentity});
+  LoginButton({required this.context, required this.updateIdentity});
 
   @override
   _LoginButtonState createState() => _LoginButtonState();
@@ -58,7 +58,7 @@ class _LoginButtonState extends State<LoginButton> {
   Widget build(BuildContext context) {
     return ElevatedButton(
       onPressed: () => _launchURL(_url_text!, widget.context),
-      child: const Text('Open Browser'),
+      child: const Text('Login'),
     );
   }
 
@@ -127,7 +127,7 @@ class _LoginButtonState extends State<LoginButton> {
     final UrlDecodedSubstring = Uri.decodeComponent(substring);
 
     _delegationIdentity = convertJsonToDelegationIdentity(UrlDecodedSubstring);
-    widget.updateDelegationIdentity(_delegationIdentity!);
+    widget.updateIdentity(_delegationIdentity!);
   }
 
   DelegationIdentity? convertJsonToDelegationIdentity(String jsonDelegation) {
