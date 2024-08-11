@@ -1,21 +1,40 @@
 import 'package:flutter/material.dart';
+
+import 'package:flutter_project/constants.dart';
+
+
+import 'package:agent_dart/agent/auth.dart' show SignIdentity;
+import 'package:agent_dart/identity/ed25519.dart' show Ed25519KeyIdentity;
+import 'package:agent_dart/utils/extension.dart'
+    show U8aExtension
+    hide U8aBufferExtension;
+
 import 'package:flutter_custom_tabs/flutter_custom_tabs_lite.dart';
 
 class LoginButton extends StatefulWidget {
-  final String url;
   final BuildContext context;
+  final SignIdentity _testIdentity;
 
-  LoginButton({required this.url, required this.context});
+
+  LoginButton(this.context, this._testIdentity);
 
   @override
   _LoginButtonState createState() => _LoginButtonState();
 }
 
 class _LoginButtonState extends State<LoginButton> {
+  String? _url_text;
+
+  @override
+  void initState() {
+    super.initState();
+    _url_text = generateIdentityAndUrl(widget._testIdentity);
+  }
+
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: () => _launchURL(widget.url, widget.context),
+      onPressed: () => _launchURL(_url_text!, widget.context),
       child: const Text('Open Browser'),
     );
   }
@@ -42,4 +61,14 @@ class _LoginButtonState extends State<LoginButton> {
       }
     }
   }
+}
+
+SignIdentity generateKey() {
+  return Ed25519KeyIdentity.generate(null);
+}
+
+String generateIdentityAndUrl(SignIdentity key) {
+  final sessionPublicKey = key.getPublicKey().toDer().toHex();
+  final target = "${Constants.greetFrontendUrl}?sessionkey=$sessionPublicKey";
+  return target;
 }

@@ -4,10 +4,6 @@ import 'dart:convert';
 import 'package:agent_dart/agent/auth.dart' show SignIdentity;
 import 'package:agent_dart/identity/delegation.dart'
     show DelegationIdentity, DelegationChain;
-import 'package:agent_dart/utils/extension.dart'
-    show U8aExtension
-    hide U8aBufferExtension;
-import 'package:agent_dart/identity/ed25519.dart' show Ed25519KeyIdentity;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_project/ICP/ICP_Connector.dart';
@@ -37,10 +33,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-SignIdentity generateKey() {
-  return Ed25519KeyIdentity.generate(null);
-}
-
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
@@ -59,14 +51,12 @@ class _MyHomePageState extends State<MyHomePage> {
   DelegationIdentity? _delegationIdentity;
 
   String _greetText = '';
-  String? _url_text;
 
   @override
   void initState() {
     super.initState();
     _initUniLinks();
     _testIdentity = generateKey();
-    _url_text = generateIdentityAndUrl(_testIdentity!);
   }
 
   Future<void> _initUniLinks() async {
@@ -155,8 +145,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body: ListView(
         children: <Widget>[
           Text('Initial URI: $_initialURI\nCurrent URI: $_currentURI'),
-          _buildUrlInput(),
-          LoginButton(url: _url_text??'', context: context),
+          LoginButton(context, _testIdentity!),
           ElevatedButton(
             onPressed: () async {
               setState(() {
@@ -174,19 +163,4 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-
-  Widget _buildUrlInput() {
-    return Padding(
-      padding: const EdgeInsets.all(10.0),
-      child: Text(  _url_text ?? ''
-      ),
-    );
-  }
-
-}
-
-String generateIdentityAndUrl(SignIdentity key) {
-  final sessionPublicKey = key.getPublicKey().toDer().toHex();
-  final target = "${Constants.greetFrontendUrl}?sessionkey=$sessionPublicKey";
-  return target;
 }
