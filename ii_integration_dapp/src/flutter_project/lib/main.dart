@@ -17,6 +17,46 @@ import 'package:flutter_custom_tabs/flutter_custom_tabs_lite.dart';
 
 import 'package:flutter_project/constants.dart';
 
+
+class LoginButton extends StatelessWidget {
+  final String url;
+  final BuildContext context;
+
+  LoginButton({required this.url, required this.context});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () => _launchURL(url, context),
+      child: const Text('Open Browser'),
+    );
+  }
+
+  void _launchURL(String url, BuildContext context) async {
+    final localContext = context;
+
+    final theme = Theme.of(localContext);
+    try {
+      await launchUrl(
+        Uri.parse(url),
+        options: LaunchOptions(
+          barColor: theme.colorScheme.surface,
+          onBarColor: theme.colorScheme.onSurface,q
+          barFixingEnabled: false,
+        ),
+      );
+    } catch (e) {
+      debugPrint("Failed to launch URL: $e");
+      if (localContext.mounted) {
+        ScaffoldMessenger.of(localContext).showSnackBar(
+          SnackBar(content: Text("Failed to open URL: $e")),
+        );
+      }
+    }
+  }
+
+}
+
 void main() async {
   runApp(const MyApp());
 }
@@ -155,10 +195,7 @@ class _MyHomePageState extends State<MyHomePage> {
         children: <Widget>[
           Text('Initial URI: $_initialURI\nCurrent URI: $_currentURI'),
           _buildUrlInput(),
-          ElevatedButton(
-            onPressed: () => _launchURL(_url_text??'', context),
-            child: const Text('Open Browser'),
-          ),
+          LoginButton(url: _url_text??'', context: context),
           ElevatedButton(
             onPressed: () async {
               setState(() {
@@ -185,28 +222,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void _launchURL(String url, BuildContext context) async {
-    final localContext = context;
-
-    final theme = Theme.of(localContext);
-    try {
-      await launchUrl(
-        Uri.parse(url),
-        options: LaunchOptions(
-          barColor: theme.colorScheme.surface,
-          onBarColor: theme.colorScheme.onSurface,
-          barFixingEnabled: false,
-        ),
-      );
-    } catch (e) {
-      debugPrint("Failed to launch URL: $e");
-      if (localContext.mounted) {
-        ScaffoldMessenger.of(localContext).showSnackBar(
-          SnackBar(content: Text("Failed to open URL: $e")),
-        );
-      }
-    }
-  }
 }
 
 String generateIdentityAndUrl(SignIdentity key) {
