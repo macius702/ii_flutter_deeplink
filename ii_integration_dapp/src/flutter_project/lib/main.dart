@@ -1,6 +1,4 @@
-
-import 'package:agent_dart/identity/delegation.dart'
-    show DelegationIdentity;
+import 'package:agent_dart/identity/delegation.dart' show DelegationIdentity;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_project/ICP/ICP_Connector.dart';
@@ -8,7 +6,6 @@ import 'package:flutter_project/greeting_client.dart';
 import 'package:flutter_project/login_button.dart';
 
 import 'package:flutter_project/constants.dart';
-
 
 void main() async {
   runApp(const MyApp());
@@ -43,8 +40,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   String _greetText = '';
 
-
-
   Future<String?> callCanisterGreet() async {
     //zrób tutaj normalne odpalenie do baclendu czyli ICPconector mtlk todo
     // no i test czy to sie łączy z backendem przez delegowaną identity
@@ -67,18 +62,19 @@ class _MyHomePageState extends State<MyHomePage> {
     //     mMyPrincipalText.text = content;
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Deep Linking Example')),
       body: ListView(
         children: <Widget>[
-          LoginButton(context: context, updateDelegationIdentity: (identity) {
-            setState(() {
-              _delegationIdentity = identity;
-            });
-          }),
+          LoginButton(
+              context: context,
+              updateDelegationIdentity: (identity) {
+                setState(() {
+                  _delegationIdentity = identity;
+                });
+              }),
           ElevatedButton(
             onPressed: () async {
               setState(() {

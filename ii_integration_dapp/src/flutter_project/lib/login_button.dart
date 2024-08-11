@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_project/constants.dart';
 
-
 import 'package:agent_dart/agent/auth.dart' show SignIdentity;
 import 'package:agent_dart/identity/ed25519.dart' show Ed25519KeyIdentity;
 import 'package:agent_dart/identity/delegation.dart'
@@ -21,7 +20,6 @@ import 'package:flutter_custom_tabs/flutter_custom_tabs_lite.dart';
 class LoginButton extends StatefulWidget {
   final BuildContext context;
   final Function(DelegationIdentity) updateDelegationIdentity;
-
 
   LoginButton({required this.context, required this.updateDelegationIdentity});
 
@@ -41,8 +39,6 @@ class _LoginButtonState extends State<LoginButton> {
 
   DelegationIdentity? _delegationIdentity; //returning  from deep link
 
-
-
   @override
   void initState() {
     super.initState();
@@ -56,7 +52,6 @@ class _LoginButtonState extends State<LoginButton> {
     _streamSubscription?.cancel();
     super.dispose();
   }
-
 
 //          Text('Initial URI: $_initialURI\nCurrent URI: $_currentURI'),
   @override
@@ -89,6 +84,7 @@ class _LoginButtonState extends State<LoginButton> {
       }
     }
   }
+
   Future<void> _initUniLinks() async {
     final localContext = context;
 
@@ -140,8 +136,6 @@ class _LoginButtonState extends State<LoginButton> {
 
     return DelegationIdentity(_testIdentity!, chain);
   }
-
-
 }
 
 SignIdentity generateKey() {
