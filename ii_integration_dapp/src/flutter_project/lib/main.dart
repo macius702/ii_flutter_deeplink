@@ -1,15 +1,11 @@
-import 'dart:async';
-import 'dart:convert';
 
-import 'package:agent_dart/agent/auth.dart' show SignIdentity;
 import 'package:agent_dart/identity/delegation.dart'
-    show DelegationIdentity, DelegationChain;
+    show DelegationIdentity;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_project/ICP/ICP_Connector.dart';
 import 'package:flutter_project/greeting_client.dart';
 import 'package:flutter_project/login_button.dart';
-import 'package:uni_links/uni_links.dart';
 
 import 'package:flutter_project/constants.dart';
 
@@ -43,72 +39,11 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  Uri? _initialURI;
-  Uri? _currentURI;
-  SignIdentity? _testIdentity;
-
-  StreamSubscription? _streamSubscription;
   DelegationIdentity? _delegationIdentity;
 
   String _greetText = '';
 
-  @override
-  void initState() {
-    super.initState();
-    _initUniLinks();
-    _testIdentity = generateKey();
-  }
 
-  Future<void> _initUniLinks() async {
-    final localContext = context;
-
-    try {
-      _initialURI = await getInitialUri();
-    } catch (e) {
-      if (mounted) {
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(localContext).showSnackBar(
-          SnackBar(content: Text("Failed to open link: $e")),
-        );
-      }
-    }
-
-    _streamSubscription = linkStream.listen((String? link) {
-      if (link != null) {
-        setState(() {
-          _currentURI = Uri.parse(link);
-          onDeepLinkActivated(link);
-        });
-      }
-    }, onError: (err) {
-      debugPrint("Error listening to link stream: $err");
-    });
-  }
-
-  void onDeepLinkActivated(String url) {
-    if (url.isEmpty) return;
-
-    const kDelegationParam = "delegation=";
-    var indexOfDelegation = url.indexOf(kDelegationParam);
-    if (indexOfDelegation == -1) {
-      print("Cannot find delegation");
-      return;
-    }
-
-    String substring =
-        url.substring(indexOfDelegation + kDelegationParam.length);
-
-    final UrlDecodedSubstring = Uri.decodeComponent(substring);
-
-    _delegationIdentity = convertJsonToDelegationIdentity(UrlDecodedSubstring);
-  }
-
-  DelegationIdentity? convertJsonToDelegationIdentity(String jsonDelegation) {
-    final obj = jsonDecode(jsonDelegation);
-    DelegationChain? chain = DelegationChain.fromJSON(obj);
-
-    return DelegationIdentity(_testIdentity!, chain);
-  }
 
   Future<String?> callCanisterGreet() async {
     //zrób tutaj normalne odpalenie do baclendu czyli ICPconector mtlk todo
@@ -132,11 +67,6 @@ class _MyHomePageState extends State<MyHomePage> {
     //     mMyPrincipalText.text = content;
   }
 
-  @override
-  void dispose() {
-    _streamSubscription?.cancel();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -144,8 +74,11 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(title: const Text('Deep Linking Example')),
       body: ListView(
         children: <Widget>[
-          Text('Initial URI: $_initialURI\nCurrent URI: $_currentURI'),
-          LoginButton(context, _testIdentity!),
+          LoginButton(context: context, updateDelegationIdentity: (identity) {
+            setState(() {
+              _delegationIdentity = identity;
+            });
+          }),
           ElevatedButton(
             onPressed: () async {
               setState(() {
