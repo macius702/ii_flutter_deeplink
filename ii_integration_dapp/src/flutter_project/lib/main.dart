@@ -58,14 +58,14 @@ class _MyHomePageState extends State<MyHomePage> {
   DelegationIdentity? _delegationIdentity;
 
   String _greetText = '';
-  final TextEditingController _urlController = TextEditingController();
+  String? _url_text;
 
   @override
   void initState() {
     super.initState();
     _initUniLinks();
     _testIdentity = generateKey();
-    _urlController.text = generateIdentityAndUrl(_testIdentity!);
+    _url_text = generateIdentityAndUrl(_testIdentity!);
   }
 
   Future<void> _initUniLinks() async {
@@ -144,7 +144,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void dispose() {
     _streamSubscription?.cancel();
-    _urlController.dispose();
     super.dispose();
   }
 
@@ -157,7 +156,7 @@ class _MyHomePageState extends State<MyHomePage> {
           Text('Initial URI: $_initialURI\nCurrent URI: $_currentURI'),
           _buildUrlInput(),
           ElevatedButton(
-            onPressed: () => _launchURL(_urlController.text, context),
+            onPressed: () => _launchURL(_url_text??'', context),
             child: const Text('Open Browser'),
           ),
           ElevatedButton(
@@ -181,11 +180,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _buildUrlInput() {
     return Padding(
       padding: const EdgeInsets.all(10.0),
-      child: TextField(
-        controller: _urlController,
-        decoration: const InputDecoration(
-          labelText: 'Enter URL',
-        ),
+      child: Text(  _url_text ?? ''
       ),
     );
   }
