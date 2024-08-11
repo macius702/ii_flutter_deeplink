@@ -1,18 +1,21 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_custom_tabs/flutter_custom_tabs_lite.dart';
 
-
-class LoginButton extends StatelessWidget {
+class LoginButton extends StatefulWidget {
   final String url;
   final BuildContext context;
 
   LoginButton({required this.url, required this.context});
 
   @override
+  _LoginButtonState createState() => _LoginButtonState();
+}
+
+class _LoginButtonState extends State<LoginButton> {
+  @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: () => _launchURL(url, context),
+      onPressed: () => _launchURL(widget.url, widget.context),
       child: const Text('Open Browser'),
     );
   }
@@ -39,5 +42,4 @@ class LoginButton extends StatelessWidget {
       }
     }
   }
-
 }
