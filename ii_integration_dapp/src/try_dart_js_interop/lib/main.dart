@@ -1,15 +1,16 @@
-import 'dart:js_interop' show importModule, JSAny;
-
 import 'package:flutter/material.dart';
+import 'package:js/js.dart';
 
-
+import 'js_interop_service.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+   MyApp({super.key});
+
+  final jsinteropService =  JsInteropService()  
 
   // This widget is the root of your application.
   @override
@@ -26,16 +27,25 @@ class MyApp extends StatelessWidget {
           title: const Text('Flutter Interop javascript Demo'),
         ),
         body: Center(
-          child: ElevatedButton(
-            onPressed: () {
-
-            },
-            child: const Text('Text: Interop javascript'),
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ElevatedButton(
+                  onPressed: () {
+                    jsinteropService.showAlert('Hello from Flutter');
+                  },
+                  child: Text('Show alert')),
+              ElevatedButton(
+                  onPressed: () {
+                    jsinteropService.requestFullScreen();
+                  },
+                  child: Text('Request Fullscreen')),
+            ],
           ),
         ),
       ),
     );
   }
 }
-
-
