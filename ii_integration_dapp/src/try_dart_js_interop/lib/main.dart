@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 
 import 'js_interop_service.dart';
 
-void main() {
+//import 'package:flutter_dotenv/flutter_dotenv.dart' as dotenv;
+
+void main() async{
+  //await dotenv.dotenv.load();
   runApp(MyApp());
 }
 
