@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:js/js.dart';
 
 import 'js_interop_service.dart';
 
