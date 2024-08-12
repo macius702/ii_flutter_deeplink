@@ -41,6 +41,16 @@ class MyApp extends StatelessWidget {
                     jsinteropService.requestFullScreen();
                   },
                   child: Text('Request Fullscreen')),
+              ElevatedButton(
+                  onPressed: () {
+                    jsinteropService.getSomeAsyncData();
+                  },
+                  child: Text('Get some async data')),
+              ElevatedButton(
+                  onPressed: () {
+                    jsinteropService.login();
+                  },
+                  child: Text('Login')),
             ],
           ),
         ),
