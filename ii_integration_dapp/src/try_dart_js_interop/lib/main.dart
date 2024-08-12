@@ -4,13 +4,13 @@ import 'package:js/js.dart';
 import 'js_interop_service.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
    MyApp({super.key});
 
-  final jsinteropService =  JsInteropService()  
+  final jsinteropService =  JsInteropService();
 
   // This widget is the root of your application.
   @override
