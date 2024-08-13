@@ -1,5 +1,20 @@
 #!/usr/bin/env bash
 
+set -e
+
+pushd ../..
+dfx deploy --playground
+popd
+
+
+echo "Removing existing .env file..."
+rm .env | true
+
+echo "Creating symbolic link to ../../.env..."
+ln -s ../../.env .env
+
+
+
 # Load the .env file
 source .env
 
@@ -13,7 +28,17 @@ if [[ -n $CANISTER_ID_GREET_BACKEND ]] && [[ -z $GREET_BACKEND_CANISTER_ID ]]; t
     line_number=$((line_number+1))
 
     # Add GREET_BACKEND_CANISTER_ID with the same value right after CANISTER_ID_GREET_BACKEND
-    sed -i "${line_number}i GREET_BACKEND_CANISTER_ID=$CANISTER_ID_GREET_BACKEND" .env
+    sed "${line_number}i GREET_BACKEND_CANISTER_ID='$CANISTER_ID_GREET_BACKEND'" .env > .env.new
+
+    # Copy the new file to the original file, preserving symbolic links
+    cp -P .env.new .env
+    rm .env.new
+fi
+
+if [ -L .env ]; then
+    echo ".env is a symbolic link."
+else
+    echo ".env is not a symbolic link."
 fi
 
 echo "DFX_NETWORK=$DFX_NETWORK"
@@ -21,7 +46,9 @@ echo "DFX_NETWORK=$DFX_NETWORK"
 # Check if DFX_NETWORK is set to 'playground'
 if [[ $DFX_NETWORK == 'playground' ]]; then
     # If it is, change it to 'ic'
-    sed -i "s/DFX_NETWORK='playground'/DFX_NETWORK='ic'/g" .env
+    sed "s/DFX_NETWORK='playground'/DFX_NETWORK='ic'/g" .env > .env.new
+    cp -P .env.new .env
+    rm .env.new
 fi
 
 npx webpack
