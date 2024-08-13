@@ -52,3 +52,5 @@ if [[ $DFX_NETWORK == 'playground' ]]; then
 fi
 
 npx webpack
+
+# and: flutter run -d chrome --web-renderer auto 
