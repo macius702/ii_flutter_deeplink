@@ -3,6 +3,7 @@
 set -e
 
 pushd ../.. >/dev/null
+    echo "Creating canisters..."
     output=$(dfx canister create --all --playground 2>&1)
     count=$(echo $output | grep -o "canister was already created" | wc -l)
     if [[ $count -eq 2 ]]; then
