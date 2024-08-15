@@ -34,9 +34,9 @@ class JsInteropService {
   login() async {
     final promise = await _login();
     final data = await promiseToFuture(promise);
-    print('Before null');
+    print('Juz w darcie Before null');
     print(data);
-    print('After null');
+    print('Juz w darcie After null');
   }
   
 
