@@ -46,6 +46,7 @@ const init = () => {
                 onSuccess: async () => {
                     const identity = authClient.getIdentity();
                     const principal = identity.getPrincipal();
+                    myConsoleLog("Inside js principal:", principal.toString());
                     window._principal = principal;
                     window._identity = identity;
                     myConsoleLog("Wow Inside js  Zalogowano", window.principal)
