@@ -31,12 +31,13 @@ class JsInteropService {
     print(data);
   }
 
-  login() async {
+  Future<String> login() async {
     final promise = await _login();
     final data = await promiseToFuture(promise);
     print('Juz w darcie Before null');
     print(data);
     print('Juz w darcie After null');
+    return data;
   }
   
 

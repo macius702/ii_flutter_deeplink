@@ -2,17 +2,21 @@ import 'package:flutter/material.dart';
 
 import 'js_interop_service.dart';
 
-//import 'package:flutter_dotenv/flutter_dotenv.dart' as dotenv;
-
-void main() async{
-  //await dotenv.dotenv.load();
+void main() async {
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
-   MyApp({super.key});
+class MyApp extends StatefulWidget {
+  MyApp({Key? key}) : super(key: key);
 
-  final jsinteropService =  JsInteropService();
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  String loginResult = '';
+
+  final jsinteropService = JsInteropService();
 
   // This widget is the root of your application.
   @override
@@ -50,10 +54,26 @@ class MyApp extends StatelessWidget {
                   },
                   child: Text('Get some async data')),
               ElevatedButton(
-                  onPressed: () {
-                    jsinteropService.login();
-                  },
-                  child: Text('Login')),
+                child: Text('Login'),
+                onPressed: () async {
+                  final s = await jsinteropService.login();
+                  setState(() {
+                    loginResult = s;
+                  });
+                },
+              ),
+              loginResult != ''
+                  ? Container(
+                      padding: EdgeInsets.all(10.0), // Add some padding
+                      decoration: BoxDecoration(
+                        border:
+                            Border.all(color: Colors.blueAccent), // Add border
+                        borderRadius: BorderRadius.circular(
+                            5.0), // Add border radius if you need
+                      ),
+                      child: Text('Login result: $loginResult'),
+                    )
+                  : Container(),
             ],
           ),
         ),
