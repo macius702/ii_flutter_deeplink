@@ -4,3 +4,5 @@ ii_integration_dapp/web_front_end.sh
 ii_integration_dapp/src/flutter_project/lib/ICP/config.dart
 ii_integration_dapp/src/flutter_project/lib/constants.dart
 ii_integration_dapp/src/try_dart_js_interop/.env
+ii_integration_dapp/src/try_dart_js_interop/assets/js/bundle.js
+ii_integration_dapp/src/try_dart_js_interop/assets/js/bundle.js.map
