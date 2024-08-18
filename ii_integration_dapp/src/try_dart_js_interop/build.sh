@@ -58,5 +58,7 @@ fi
 
 npx webpack
 
+make
+
 # or: flutter run -d chrome --web-renderer auto
 # or: flutter build web --release && (cd build/web && http-server )

@@ -15,7 +15,9 @@ external void _requestFullScreen();
 external _getSomeAsyncData();
 
 @JS()
-external _login();
+external _login(String url_text);
+
+
 
 class JsInteropService {
   void showAlert(String message) {
@@ -31,13 +33,14 @@ class JsInteropService {
     print(data);
   }
 
-  Future<String> login() async {
-    final promise = await _login();
-    final data = await promiseToFuture(promise);
+  Future<String> login(String url_text) async {
+    final promise = await _login(url_text);
+    String delegations = await promiseToFuture<String>(promise);
+
     print('Juz w darcie Before null');
-    print(data);
+    print(delegations);
     print('Juz w darcie After null');
-    return data;
+    return delegations;
   }
   
 
